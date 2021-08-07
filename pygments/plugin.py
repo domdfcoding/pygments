@@ -39,14 +39,29 @@ FORMATTER_ENTRY_POINT = 'pygments.formatters'
 STYLE_ENTRY_POINT = 'pygments.styles'
 FILTER_ENTRY_POINT = 'pygments.filters'
 
+_entry_point_getter = None
 
-def iter_entry_points(group_name):
+try:
+    import entrypoints
+except (ImportError, OSError):
+    pass
+else:
+    _entry_point_getter = entrypoints.get_group_all
+
+if _entry_point_getter is None:
     try:
         import pkg_resources
     except (ImportError, OSError):
+        pass
+    else:
+        _entry_point_getter = pkg_resources.iter_entry_points
+
+
+def iter_entry_points(group_name):
+    if _entry_point_getter is None:
         return []
 
-    return pkg_resources.iter_entry_points(group_name)
+    return _entry_point_getter(group_name)
 
 
 def find_plugin_lexers():
